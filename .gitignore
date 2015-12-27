@@ -1,0 +1,16 @@
+*.sdf
+*.opensdf
+*.pdb
+*.dll
+*.lib
+*.exe
+*.log
+*.ilk
+*.suo
+*.exp
+
+.idea/*
+bin/*
+personal/*
+*__pycache__*
+
