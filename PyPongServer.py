@@ -6,6 +6,10 @@ class PyPongServer:
         self.port = port
         self._server_listener = ServerListenThread(host, port)
 
+    def stop_listener(self):
+        self._server_listener.stop()
+        self._server_listener.join()
+
     def start(self):
         print("Starting server...")
         self._server_listener.start()
@@ -15,8 +19,7 @@ class PyPongServer:
             cmd = input()
             if cmd == "quit":
                 print("Server is stopping...")
-                self._server_listener.stop()
-                self._server_listener.join()
+                self.stop_listener()
                 print("Server stopped!")
                 break
 
