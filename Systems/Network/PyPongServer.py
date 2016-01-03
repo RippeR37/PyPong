@@ -1,4 +1,4 @@
-from src.ServerListenThread import ServerListenThread
+from Systems.Network.ServerListenThread import ServerListenThread
 
 class PyPongServer:
     def __init__(self, host="127.0.0.1", port=7664):

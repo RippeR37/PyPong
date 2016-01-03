@@ -1,5 +1,6 @@
 import threading
-from src.tcp.tcp_server import TCPServer
+
+from Systems.Network.tcp.tcp_server import TCPServer
 
 
 class ServerListenThread(threading.Thread):

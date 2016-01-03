@@ -1,5 +1,5 @@
-from src.tcp.tcp_client import TCPClient
-from src.ClientListenThread import ClientListenThread
+from Systems.Network.tcp.tcp_client import TCPClient
+from Systems.Network.ClientListenThread import ClientListenThread
 
 
 client = TCPClient("localhost", 7664)
