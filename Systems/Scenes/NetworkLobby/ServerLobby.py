@@ -1,5 +1,5 @@
 from Systems.Engine.Scene import Scene
-from Systems.Scenes.InGame.GameplayScene import GameplayScene
+from Systems.Scenes.Gameplay.GameplayScene import GameplayScene
 
 
 class ServerLobby(Scene):
