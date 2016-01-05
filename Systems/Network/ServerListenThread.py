@@ -1,6 +1,5 @@
-import threading
-
 from Systems.Network.tcp.tcp_server import TCPServer
+import threading
 
 
 class ServerListenThread(threading.Thread):
@@ -42,7 +41,7 @@ class ServerListenThread(threading.Thread):
             lambda client, data:
                 print("Client {} sent data: {}".format(client.getpeername(), data.decode()))
         )
-        self._server.callbacks_incoming_data.append(lambda client, data: client.send(data))
+        self._server.callbacks_incoming_data.append(lambda client, data: self._server.send_all_except(data, client))
 
     def run(self):
         if not self._is_running:

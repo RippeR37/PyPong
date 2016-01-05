@@ -3,39 +3,60 @@ from Systems.Engine.Window import Window
 from Systems.Game.PlayerState import PlayerState
 from Systems.Game.BallState import BallState
 from Systems.Game.GameState import GameState
+from Systems.Network.PyPongClient import PyPongClient
 import pygame
+import threading
 
 
 class GameplayScene(Scene):
-    def __init__(self):
+    def __init__(self, client):
+        assert isinstance(client, PyPongClient), "Invalid object type - client must be of PyPongClient type!"
+
         super().__init__(True, False)
+        self._client = client
+        self._client.bind_gameplay(self)
         self._end = False
         self._window = Window((600, 400), "PyPong")
         self._window.create()
         self._game_state = \
             GameState(data=(PlayerState(-1.0, 0.0), PlayerState(1.0, 0.0), BallState(0.0, 0.0, 1.0, 1.0)))
         self._speed = 0.0
+        self._listen_thread = None
+        self._listen_to_host()
+        self._clock = pygame.time.Clock()
+
+    def _listen_to_host(self):
+        self._listen_thread = threading.Thread(target=self._client.listen, daemon=True)
+        self._listen_thread.start()
 
     def _process_key_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                self._speed = -0.005
+                self._speed = -0.5
             elif event.key == pygame.K_DOWN:
-                self._speed = 0.005
+                self._speed = 0.5
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 self._speed = 0.0
 
     def update(self, dt):
+        self._clock.tick(60)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self._end = True
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 self._process_key_event(event)
 
+        frame_game_state = self._game_state  # take current game state and work with it
+
+        # Update game state in this frame
         self._game_state.player1.y += self._speed * dt
-        self._game_state.player1.y = min(1.0, self._game_state.player1.y)
-        self._game_state.player1.y = max(-1.0, self._game_state.player1.y)
+        self._game_state.player1.y = min(1.0, frame_game_state.player1.y)
+        self._game_state.player1.y = max(-1.0, frame_game_state.player1.y)
+
+        # Send new state to server
+        self._client.update_host(self._game_state.to_json())
 
     def render(self):
         if not self._end:

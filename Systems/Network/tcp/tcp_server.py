@@ -16,9 +16,19 @@ class TCPServer:
         self.callbacks_disconnect = []
         self.callbacks_connection_lost = []
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def bind(self):
         self._socket.bind((self._host, self._port))
+
+    def send_all(self, data):
+        for client in self._clients:
+            client.send(data)
+
+    def send_all_except(self, data, ignored_client):
+        for client in self._clients:
+            if client != ignored_client:
+                client.send(data)
 
     def listen(self):
         self._socket.listen(self._max_clients)
