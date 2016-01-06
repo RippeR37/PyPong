@@ -43,8 +43,12 @@ class GameplayScene(Scene):
         except:
             pass
 
-        opponent = PlayerState(json_proc['player2']['x'], json_proc['player1']['y'], json_proc['player1']['pts'])
-        self._game_state.player2 = opponent
+        if self._index == 0:
+            opponent = PlayerState(json_proc["player2"]['x'], json_proc["player2"]['y'], json_proc["player2"]['pts'])
+            self._game_state.player2 = opponent
+        if self._index == 1:
+            opponent = PlayerState(json_proc["player1"]['x'], json_proc["player1"]['y'], json_proc["player1"]['pts'])
+            self._game_state.player1 = opponent
 
     def update(self, dt):
         if self._lobby:
@@ -60,10 +64,17 @@ class GameplayScene(Scene):
 
         frame_game_state = self._game_state  # take current game state and work with it
 
+        print("### INDEX: {}".format(self._index))
+
         # Update game state in this frame
-        self._game_state.player1.y += self._speed * dt
-        self._game_state.player1.y = min(1.0, frame_game_state.player1.y)
-        self._game_state.player1.y = max(-1.0, frame_game_state.player1.y)
+        if self._index == 0:
+            self._game_state.player1.y += self._speed * dt
+            self._game_state.player1.y = min(1.0, frame_game_state.player1.y)
+            self._game_state.player1.y = max(-1.0, frame_game_state.player1.y)
+        elif self._index == 1:
+            self._game_state.player2.y += self._speed * dt
+            self._game_state.player2.y = min(1.0, frame_game_state.player2.y)
+            self._game_state.player2.y = max(-1.0, frame_game_state.player2.y)
 
         # Send new state to server
         self._client.update_host(self._game_state.to_json())
