@@ -4,4 +4,4 @@ class BallState(object):
         self.x = _x
         self.y = _y
         self.vx = _vx
-        self.xy = _vy
+        self.vy = _vy

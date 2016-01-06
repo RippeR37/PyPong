@@ -1,7 +1,9 @@
 from Systems.Network.tcp.tcp_server import TCPServer
 from Systems.Network.Messages.IndexAssignmentProc import IndexAssignmentProc
 from Systems.Network.Messages.ServerReadyProc import ServerReadyProc
+from Systems.Network.Messages.GamestateUpdateProc import GameStateUpdateProc
 import threading
+import json
 
 
 class ServerListenThread(threading.Thread):
@@ -21,7 +23,33 @@ class ServerListenThread(threading.Thread):
             self._server.send_all(ready_proc_json)
 
     def _process_data(self, client, data):
-        self._server.send_all_except(data[1:-1], client)
+        try:
+            trimmed_data = data[1:-1]
+            gsup = GameStateUpdateProc(None).from_json(json.loads(trimmed_data))
+            ball = gsup.data['game_state'].ball
+
+            # Update ball position
+            ball.x = ball.x + ball.vx * 0.005
+            ball.y = ball.y + ball.vy * 0.005
+
+            # Check if ball is in rect
+            if ball.x < -1.0:
+                ball.x = -1.0
+                ball.vx = -ball.vx
+            if ball.y < -1.0:
+                ball.y = -1.0
+                ball.vy = -ball.vy
+            if ball.x > 1.0:
+                ball.x = 1.0
+                ball.vx = -ball.vx
+            if ball.y > 1.0:
+                ball.y = 1.0
+                ball.vy = -ball.vy
+
+            self._server.send_all_except(gsup.to_json(), client)
+        except:
+            print("Wrong trimmed data: '{}'".format(trimmed_data))
+
 
     def init_callbacks(self):
         # Index Assignment lambda
@@ -56,10 +84,6 @@ class ServerListenThread(threading.Thread):
         )
 
         # Incoming data
-        # self._server.callbacks_incoming_data.append(
-        #     lambda client, data:
-        #         print("Client {} sent data: {}".format(client.getpeername(), data.decode()))
-        # )
         self._server.callbacks_incoming_data.append(
             lambda client, data:
                 self._process_data(client, data)

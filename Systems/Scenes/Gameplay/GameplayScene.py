@@ -2,6 +2,7 @@ from Systems.Engine.Scene import Scene
 from Systems.Game.PlayerState import PlayerState
 from Systems.Game.BallState import BallState
 from Systems.Game.GameState import GameState
+from Systems.Network.Messages.GamestateUpdateProc import GameStateUpdateProc
 from Systems.Network.PyPongClient import PyPongClient
 import pygame
 
@@ -43,18 +44,22 @@ class GameplayScene(Scene):
         except:
             pass
 
-        if self._index == 0:
-            opponent = PlayerState(json_proc["player2"]['x'], json_proc["player2"]['y'], json_proc["player2"]['pts'])
-            self._game_state.player2 = opponent
-        if self._index == 1:
-            opponent = PlayerState(json_proc["player1"]['x'], json_proc["player1"]['y'], json_proc["player1"]['pts'])
-            self._game_state.player1 = opponent
+        try:
+            if json_proc['proc'] == 'game_state_update':
+                server_gs = GameStateUpdateProc(None).from_json(json_proc)
+                self._game_state.ball = server_gs.data['game_state'].ball
+                if self._index == 0:
+                    self._game_state.player2 = server_gs.data['game_state'].player2
+                if self._index == 1:
+                    self._game_state.player1 = server_gs.data['game_state'].player1
+        except:
+            print("DEBUG INF #42179521")
 
     def update(self, dt):
         if self._lobby:
             return
 
-        self._clock.tick(30)
+        self._clock.tick(60)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -63,8 +68,6 @@ class GameplayScene(Scene):
                 self._process_key_event(event)
 
         frame_game_state = self._game_state  # take current game state and work with it
-
-        print("### INDEX: {}".format(self._index))
 
         # Update game state in this frame
         if self._index == 0:
@@ -77,7 +80,7 @@ class GameplayScene(Scene):
             self._game_state.player2.y = max(-1.0, frame_game_state.player2.y)
 
         # Send new state to server
-        self._client.update_host(self._game_state.to_json())
+        self._client.update_host(GameStateUpdateProc(self._game_state).to_json())
 
     def render(self):
         if not self._end and not self._lobby:
