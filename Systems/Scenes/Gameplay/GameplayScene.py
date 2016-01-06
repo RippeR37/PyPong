@@ -24,6 +24,7 @@ class GameplayScene(Scene):
         self._clock = pygame.time.Clock()
         self._window.set_title("PyPong - Gameplay")
         self._client.bind_proc_callback(self._process_json_proc)
+        self._ball_img = pygame.image.load("Assets/ball.jpg")
 
     def _process_key_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -103,7 +104,8 @@ class GameplayScene(Scene):
 
     def _render_ball(self, ball_data):
         ball_rect = self._get_ball_rect(ball_data)
-        self._window.get_surface().fill((255, 255, 255), ball_rect)
+        # self._window.get_surface().fill((255, 255, 255), ball_rect)
+        self._window.get_surface().blit(self._ball_img, ball_rect)
 
     def _get_player_rect(self, player_data):
         width = self._window.get_size()[0] / 30
