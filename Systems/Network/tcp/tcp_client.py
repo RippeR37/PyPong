@@ -50,7 +50,7 @@ class TCPClient:
                     data = sock.recv(self._buffer_size)
                     if data:
                         for callback in self._callbacks_incoming_data:
-                            callback(sock, data)
+                            callback(sock, data.decode())
                     else:
                         for callback in self._callbacks_disconnect:
                             callback(sock)

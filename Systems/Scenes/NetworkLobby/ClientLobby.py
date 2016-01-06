@@ -1,11 +1,12 @@
 from Systems.Engine.Scene import Scene
-from Systems.Scenes.Gameplay.GameplayScene import GameplayScene
+from Systems.Scenes.Gameplay.WaitingRoomScene import ClientReadyScene
 from Systems.Network.PyPongClient import PyPongClient
+
 
 class ClientLobby(Scene):
     def __init__(self):
         super().__init__(True, False)
-        self._gameplay_ready = False
+        self._connected = False
         self._host_ip = "localhost"
         self._host_port = 7664
         self._client = None
@@ -25,14 +26,14 @@ class ClientLobby(Scene):
 
         # if connected, go to gameplay
         if self._client.is_connected():
-            self._gameplay_ready = True
+            self._connected = True
 
     def render(self):
-        if self._gameplay_ready:
+        if self._connected:
             print("Connected to server, entering game room.")
         else:
             print("Could not connect to server!")
 
     def process_scene_stack(self, scene_stack, scene_index):
-        if self._gameplay_ready:
-            scene_stack.push(GameplayScene(self._client))  # TODO: Pass network client here!
+        if self._connected:
+            scene_stack.push(ClientReadyScene(self._client))
