@@ -22,7 +22,7 @@ class GameplayScene(Scene):
             GameState(data=(PlayerState(-1.0, 0.0), PlayerState(1.0, 0.0), BallState(0.0, 0.0, 1.0, 1.0)))
         self._speed = 0.0
         self._clock = pygame.time.Clock()
-        self._window.set_title("PyPong - Gameplay")
+        self._window.set_title("PyPong - Gameplay | {} : {}".format(0, 0))
         self._client.bind_proc_callback(self._process_json_proc)
         self._ball_img = pygame.image.load("Assets/ball.jpg")
 
@@ -41,6 +41,13 @@ class GameplayScene(Scene):
     def _send_round_start(self):
         self._client.signal_round_start()
 
+    def _update_title_pts(self, game_state):
+        cmp_pts = lambda gs1, gs2: \
+            gs1.player1.pts == gs2.player1.pts and gs1.player2.pts == gs2.player2.pts
+
+        if not cmp_pts(self._game_state, game_state):
+            self._window.set_title("PyPong - Gameplay | {} : {}".format(game_state.player1.pts, game_state.player2.pts))
+
     def _process_json_proc(self, json_proc):
         try:
             if json_proc['proc'] == 'index_assignment':
@@ -53,6 +60,7 @@ class GameplayScene(Scene):
         try:
             if json_proc['proc'] == 'game_state_update':
                 server_gs = GameStateUpdateProc(None).from_json(json_proc)
+                self._update_title_pts(server_gs.data['game_state'])
                 self._game_state.ball = server_gs.data['game_state'].ball
                 if self._index == 0:
                     self._game_state.player2 = server_gs.data['game_state'].player2
