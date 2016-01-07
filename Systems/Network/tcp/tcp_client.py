@@ -31,7 +31,10 @@ class TCPClient:
 
     def send(self, data):
         if self._is_connected:
-            self._socket.send(data.encode())
+            prefix = "$"
+            sufix = "&"
+            presufixed_data = prefix + data + sufix
+            self._socket.send(presufixed_data.encode())
 
     def read(self):
         if self._is_connected:

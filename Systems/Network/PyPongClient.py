@@ -1,6 +1,7 @@
 from Systems.Network.tcp.tcp_client import TCPClient
+from Systems.Network.Messages.GamestateUpdateProc import GameStateUpdateProc
+from Systems.Network.Messages.StartRoundProc import StartRoundProc
 import json
-import sys
 
 
 class PyPongClient:
@@ -35,8 +36,11 @@ class PyPongClient:
     def close(self):
         self._client.close()
 
-    def update_host(self, game_state_json):
-        self._client.send("$" + game_state_json + "&")
+    def update_host_game_state(self, game_state):
+        self._client.send(GameStateUpdateProc(game_state).to_json())
+
+    def signal_round_start(self):
+        self._client.send(StartRoundProc().to_json())
 
     def update_client(self, incoming_data):
         self._buffer += incoming_data

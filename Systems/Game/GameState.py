@@ -1,9 +1,8 @@
-from Systems.Utils.JsonHelper import *
 from Systems.Game.PlayerState import PlayerState
 from Systems.Game.BallState import BallState
 
 class GameState(object):
-    def __init__(self, data=None, json_data=None):
+    def __init__(self, data=None):
         self.player1 = None
         self.player2 = None
         self.ball = None
@@ -13,10 +12,7 @@ class GameState(object):
             assert isinstance(self.player1, PlayerState), "Player1 data must be of PlayerState type!"
             assert isinstance(self.player2, PlayerState), "Player2 data must be of PlayerState type!"
             assert isinstance(self.ball, BallState), "Ball data must be of BallState type!"
-        elif json_data:
-            self.__dict__ = from_json(json_data)
         else:
-            raise RuntimeError
-
-    def to_json(self):
-        return to_json(self)
+            self.player1 = PlayerState(-1.0, 0.0, 0)
+            self.player2 = PlayerState(1.0, 0.0, 0)
+            self.ball = BallState(0.0, 0.0, 0.0, 0.0)

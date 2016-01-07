@@ -32,9 +32,14 @@ class GameplayScene(Scene):
                 self._speed = -0.5
             elif event.key == pygame.K_DOWN:
                 self._speed = 0.5
+            elif event.key == pygame.K_SPACE:
+                self._send_round_start()
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 self._speed = 0.0
+
+    def _send_round_start(self):
+        self._client.signal_round_start()
 
     def _process_json_proc(self, json_proc):
         try:
@@ -81,7 +86,7 @@ class GameplayScene(Scene):
             self._game_state.player2.y = max(-1.0, frame_game_state.player2.y)
 
         # Send new state to server
-        self._client.update_host(GameStateUpdateProc(self._game_state).to_json())
+        self._client.update_host_game_state(self._game_state)
 
     def render(self):
         if not self._end and not self._lobby:
