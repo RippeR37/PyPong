@@ -16,7 +16,7 @@ class ServerListenThread(threading.Thread):
         self.init_callbacks()
         self._buffers = []
         self._game_state = GameState()
-        self._client_start_round = 1  # Second player starts first TODO: make sure this changes to whoever lost last
+        self._client_start_round = 1  # Second player starts first
 
     def _reset_game_state(self):
         self._game_state = GameState()
@@ -49,10 +49,32 @@ class ServerListenThread(threading.Thread):
     def _process_game_state_update(self, client, json_proc):
         gsup = GameStateUpdateProc(None).from_json(json_proc)
         ball = self._game_state.ball
+        p1 = gsup.data['game_state'].player1
+        p2 = gsup.data['game_state'].player2
 
         # Update ball position
         ball.x += ball.vx * 0.01
         ball.y += ball.vy * 0.01
+
+        # Check collision with paddles
+        p1_rect = self.get_player_rect(p1)
+        p2_rect = self.get_player_rect(p2)
+        b_rect = self.get_ball_rect(ball)
+
+        if self.intersect(p1_rect, b_rect):
+            ball.x = (p1_rect[0] + p1_rect[2]) * 2.0 - 1.0
+            ball.vx = abs(ball.vx)
+        elif self.intersect(p2_rect, b_rect):
+            ball.x = p2_rect[0] - b_rect[2]
+            ball.vx = -1.0 * abs(ball.vx)
+
+        # Check if ball doesn't touch upper or lower edge and has to bounce
+        if ball.y < -1.0:
+            ball.y = -1.0
+            ball.vy = -ball.vy
+        if ball.y > 1.0:
+            ball.y = 1.0
+            ball.vy = -ball.vy
 
         # Check if ball didn't escape from game area (leading to end of round)
         if ball.x < -1.0:
@@ -64,19 +86,37 @@ class ServerListenThread(threading.Thread):
             self._game_state.player1.pts += 1
             self._client_start_round = 1
 
-        # Check if ball doesn't touch upper or lower edge and has to bounce
-        if ball.y < -1.0:
-            ball.y = -1.0
-            ball.vy = -ball.vy
-        if ball.y > 1.0:
-            ball.y = 1.0
-            ball.vy = -ball.vy
-
         # Update ball's state in client's message and broadcast it along
         gsup.data['game_state'].ball = ball
         gsup.data['game_state'].player1.pts = self._game_state.player1.pts
         gsup.data['game_state'].player2.pts = self._game_state.player2.pts
         self._server.send_all_except(gsup.to_json(), client)
+
+    @staticmethod
+    def intersect(r1, r2):
+        return \
+            (r1[0] < r2[0] + r2[2]) and (r1[0] + r1[2] > r2[0]) and \
+            (r1[1] < r2[1] + r2[3]) and (r1[1] + r1[3] > r2[1])
+
+    @staticmethod
+    def get_player_rect(player_data):
+        width = 1.0 / 30.0
+        height = 1.0 / 5.0
+
+        pos_x = (player_data.x + 1.0) * 0.5 * (1.0 - width)
+        pos_y = (player_data.y + 1.0) * 0.5 * (1.0 - height)
+
+        return pos_x, pos_y, width, height
+
+    @staticmethod
+    def get_ball_rect(ball_data):
+        width = 1.0 / 30.0
+        height = 1.0 / 20.0
+
+        pos_x = (ball_data.x + 1.0) * 0.5 * (1.0 - width)
+        pos_y = (ball_data.y + 1.0) * 0.5 * (1.0 - height)
+
+        return pos_x, pos_y, width, height
 
     def init_callbacks(self):
         # Index Assignment lambda
