@@ -20,6 +20,7 @@ class ServerListenThread(threading.Thread):
 
     def _reset_game_state(self):
         self._game_state = GameState()
+        self._client_start_round = 1
 
     def _signal_start_if_ready(self):
         if len(self._server._clients) == 2:
@@ -42,7 +43,6 @@ class ServerListenThread(threading.Thread):
         if self._game_state.ball.vx == 0.0 and self._game_state.ball.vy == 0.0:
             client_index = self._server.get_client_index(client)
             if client_index == self._client_start_round:
-                print("STARTING ROUND!")
                 self._game_state.ball.vx = 0.33
                 self._game_state.ball.vy = 0.66
 
@@ -51,25 +51,31 @@ class ServerListenThread(threading.Thread):
         ball = self._game_state.ball
 
         # Update ball position
-        ball.x += ball.vx * 0.005
-        ball.y += ball.vy * 0.005
+        ball.x += ball.vx * 0.01
+        ball.y += ball.vy * 0.01
 
-        # Check if ball is in rect
+        # Check if ball didn't escape from game area (leading to end of round)
         if ball.x < -1.0:
-            ball.x = -1.0
-            ball.vx = -ball.vx
+            ball.reset()
+            self._game_state.player2.pts += 1
+            self._client_start_round = 0
+        if ball.x > 1.0:
+            ball.reset()
+            self._game_state.player1.pts += 1
+            self._client_start_round = 1
+
+        # Check if ball doesn't touch upper or lower edge and has to bounce
         if ball.y < -1.0:
             ball.y = -1.0
             ball.vy = -ball.vy
-        if ball.x > 1.0:
-            ball.x = 1.0
-            ball.vx = -ball.vx
         if ball.y > 1.0:
             ball.y = 1.0
             ball.vy = -ball.vy
 
         # Update ball's state in client's message and broadcast it along
         gsup.data['game_state'].ball = ball
+        gsup.data['game_state'].player1.pts = self._game_state.player1.pts
+        gsup.data['game_state'].player2.pts = self._game_state.player2.pts
         self._server.send_all_except(gsup.to_json(), client)
 
     def init_callbacks(self):

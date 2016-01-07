@@ -25,6 +25,7 @@ class GameplayScene(Scene):
         self._window.set_title("PyPong - Gameplay | {} : {}".format(0, 0))
         self._client.bind_proc_callback(self._process_json_proc)
         self._ball_img = pygame.image.load("Assets/ball.jpg")
+        self._new_window_title = ""
 
     def _process_key_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -46,7 +47,7 @@ class GameplayScene(Scene):
             gs1.player1.pts == gs2.player1.pts and gs1.player2.pts == gs2.player2.pts
 
         if not cmp_pts(self._game_state, game_state):
-            self._window.set_title("PyPong - Gameplay | {} : {}".format(game_state.player1.pts, game_state.player2.pts))
+            self._new_window_title = "PyPong - Gameplay | {} : {}".format(game_state.player1.pts, game_state.player2.pts)
 
     def _process_json_proc(self, json_proc):
         try:
@@ -80,6 +81,11 @@ class GameplayScene(Scene):
                 self._end = True
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 self._process_key_event(event)
+
+        if not self._end:
+            if self._new_window_title != "":
+                self._window.set_title(self._new_window_title)
+                self._new_window_title = ""
 
         frame_game_state = self._game_state  # take current game state and work with it
 
