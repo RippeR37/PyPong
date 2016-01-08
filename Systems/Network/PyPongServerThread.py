@@ -3,6 +3,7 @@ from Systems.Network.Messages.IndexAssignmentProc import IndexAssignmentProc
 from Systems.Network.Messages.ServerReadyProc import ServerReadyProc
 from Systems.Network.Messages.GamestateUpdateProc import GameState, GameStateUpdateProc
 from Systems.Network.TokenBuffer import TokenBuffer
+from Systems.Utils.TimeHelper import Time
 import threading
 import json
 
@@ -18,14 +19,16 @@ class PyPongServerThread(threading.Thread):
         self._buffers = dict()
         self._game_state = GameState()
         self._client_start_round = 1  # Second player starts first
+        self._ball_speed = 1.0
+        self._ball_speed_max = 2.5
+        self._last_time = None
+        self._this_time = None
 
     def _add_buffer(self, client):
-        # print("Creating buffer for client: {}".format(client.getpeername()))
         self._buffers[client.getpeername()] = TokenBuffer()
         return None
 
     def _remove_buffer(self, client):
-        # print("Removing buffer of client: {}".format(client.getpeername()))
         del self._buffers[client.getpeername()]
         return None
 
@@ -112,8 +115,17 @@ class PyPongServerThread(threading.Thread):
         if self._game_state.ball.vx == 0.0 and self._game_state.ball.vy == 0.0:
             client_index = self._server.get_client_index(client)
             if client_index == self._client_start_round:
-                self._game_state.ball.vx = 0.33
-                self._game_state.ball.vy = 0.66
+                if client_index == 0:
+                    self._game_state.ball.vx = 0.33
+                    self._game_state.ball.vy = 0.66
+                else:
+                    self._game_state.ball.vx = -0.33
+                    self._game_state.ball.vy = -0.66
+
+    def _increase_ball_speed_on_hit(self):
+        self._ball_speed += 0.1
+        if self._ball_speed > self._ball_speed_max:
+            self._ball_speed = self._ball_speed_max
 
     def _process_game_state_update(self, client, json_proc):
         gsup = GameStateUpdateProc(None).from_json(json_proc)
@@ -121,9 +133,16 @@ class PyPongServerThread(threading.Thread):
         p1 = gsup.data['game_state'].player1
         p2 = gsup.data['game_state'].player2
 
+        # Delta time computing
+        self._this_time = Time.now()
+        if self._last_time is None:
+            self._last_time = self._this_time
+        dt = Time.interval_as_float(self._this_time - self._last_time)
+        self._last_time = self._this_time
+
         # Update ball position
-        ball.x += ball.vx * 0.01
-        ball.y += ball.vy * 0.01
+        ball.x += ball.vx * self._ball_speed * dt
+        ball.y += ball.vy * self._ball_speed * dt
 
         # Check collision with paddles
         p1_rect = self.get_player_rect(p1)
@@ -133,9 +152,11 @@ class PyPongServerThread(threading.Thread):
         if self.intersect(p1_rect, b_rect):
             ball.x = (p1_rect[0] + p1_rect[2]) * 2.0 - 1.0
             ball.vx = abs(ball.vx)
+            self._increase_ball_speed_on_hit()
         elif self.intersect(p2_rect, b_rect):
             ball.x = p2_rect[0] - b_rect[2]
             ball.vx = -1.0 * abs(ball.vx)
+            self._increase_ball_speed_on_hit()
 
         # Check if ball doesn't touch upper or lower edge and has to bounce
         if ball.y < -1.0:

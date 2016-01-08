@@ -1,4 +1,5 @@
 from Systems.Engine.SceneStack import SceneStack
+from Systems.Utils.TimeHelper import Time
 
 
 class GameEngine(object):
@@ -12,10 +13,14 @@ class GameEngine(object):
         scene.process_scene_stack(self._scenes, scene_index)
 
     def run(self):
-        while self._scenes.count() > 0:
-            dt = 0.1  # TODO: fix delta time computing
-            top_scene = self._scenes.get_scene(-1)  # get last scene
+        last_time = Time.now()
 
+        while self._scenes.count() > 0:
+            this_time = Time.now()
+            dt = Time.interval_as_float(this_time - last_time)
+            last_time = this_time
+
+            top_scene = self._scenes.get_scene(-1)  # get last scene
             if top_scene.is_stackable():
                 for scene_index in range(self._scenes.count()):
                     current_scene = self._scenes.get_scene(scene_index)

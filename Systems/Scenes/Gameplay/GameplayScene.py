@@ -21,6 +21,7 @@ class GameplayScene(Scene):
         self._game_state = \
             GameState(data=(PlayerState(-1.0, 0.0), PlayerState(1.0, 0.0), BallState(0.0, 0.0, 1.0, 1.0)))
         self._speed = 0.0
+        self._speed_factor = 2.5
         self._clock = pygame.time.Clock()
         self._window.set_title("PyPong - Gameplay | {}:{}".format(0, 0))
         self._client.bind_proc_callback(self._process_json_proc)
@@ -30,14 +31,16 @@ class GameplayScene(Scene):
     def _process_key_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                self._speed = -0.5
+                self._speed += -1.0 * self._speed_factor
             elif event.key == pygame.K_DOWN:
-                self._speed = 0.5
+                self._speed += 1.0 * self._speed_factor
             elif event.key == pygame.K_SPACE:
                 self._send_round_start()
         elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-                self._speed = 0.0
+            if event.key == pygame.K_UP:
+                self._speed -= -1.0 * self._speed_factor
+            elif event.key == pygame.K_DOWN:
+                self._speed -= 1.0 * self._speed_factor
 
     def _send_round_start(self):
         self._client.signal_round_start()
