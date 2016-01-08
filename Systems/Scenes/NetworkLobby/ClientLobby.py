@@ -1,5 +1,5 @@
 from Systems.Engine.Scene import Scene
-from Systems.Scenes.Gameplay.WaitingRoomScene import ClientReadyScene
+from Systems.Scenes.Gameplay.WaitingRoomScene import WaitingRoomScene
 from Systems.Network.PyPongClient import PyPongClient
 
 
@@ -36,4 +36,4 @@ class ClientLobby(Scene):
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._connected:
-            scene_stack.push(ClientReadyScene(self._client))
+            scene_stack.push(WaitingRoomScene(self._client))

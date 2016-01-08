@@ -55,6 +55,8 @@ class GameplayScene(Scene):
                 print("Other player has disconnected!")
                 self._lobby = True
                 self._index = json_proc['data']['index']
+                self._client.set_default_proc_callback()
+                return False  # consume message as it was processed
         except:
             pass
 
@@ -67,8 +69,11 @@ class GameplayScene(Scene):
                     self._game_state.player2 = server_gs.data['game_state'].player2
                 if self._index == 1:
                     self._game_state.player1 = server_gs.data['game_state'].player1
+                return False  # consume message as it was processed
         except:
             print("DEBUG INF #42179521")
+
+        return True  # TODO: change this?!
 
     def update(self, dt):
         if self._lobby:

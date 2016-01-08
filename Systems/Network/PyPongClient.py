@@ -1,3 +1,4 @@
+from Systems.Network.TokenBuffer import TokenBuffer
 from Systems.Network.tcp.tcp_client import TCPClient
 from Systems.Network.Messages.GamestateUpdateProc import GameStateUpdateProc
 from Systems.Network.Messages.StartRoundProc import StartRoundProc
@@ -6,17 +7,20 @@ import json
 
 class PyPongClient:
     def __init__(self, host="localhost", port=7664):
-        self._client = TCPClient(host,port)
+        self._client = TCPClient(host, port)
         self._init_callbacks()
-        self._buffer = ""
+        self._buffer = TokenBuffer()
         self.proc_callback = lambda json_proc: None
+        self.set_default_proc_callback()
 
     def _init_callbacks(self):
-        # TODO: use incoming data (game_state in json) to update current game_state
         self._client._callbacks_incoming_data.append(
             lambda sock, data:
                 self.update_client(data)
         )
+
+    def set_default_proc_callback(self):
+        self.proc_callback = lambda json_proc: True  # don't consume message but wait for proper handler to consume it
 
     def bind_proc_callback(self, callback):
         self.proc_callback = callback
@@ -43,22 +47,27 @@ class PyPongClient:
         self._client.send(StartRoundProc().to_json())
 
     def update_client(self, incoming_data):
-        self._buffer += incoming_data
+        self._buffer.push(incoming_data)
 
         while True:
-            index_l = self._buffer.find('$')       # Find start of first full-proc
-            if index_l == -1:
-                break
-            first_proc_1 = self._buffer[index_l+1:]
-            index_r = first_proc_1.find('&')       # Find end of first full-proc
-            first_proc_2 = first_proc_1[:index_r]
+            current_proc = self._buffer.peek_first_token('$', '&')
 
-            if len(first_proc_2) > 0:
-                self._buffer = first_proc_1[index_r+1:]
+            if len(current_proc) > 0:
+                result = None
                 try:
-                    proc_json = json.loads(first_proc_2)
-                    self.proc_callback(proc_json)
-                except:
-                    print("Invalid JSON procedure: '{}'".format(first_proc_2))
+                    json_proc = json.loads(current_proc)
+                    result = self.proc_callback(json_proc)
+                except json.JsonDecodeError:
+                    print("Invalid JSON proc: '{}'".format(current_proc))
+                except Exception as exc:
+                    print("Unhandled exception from JSON proc callback: {}".format(exc))
+                finally:
+                    if result is None:
+                        self._buffer.get_first_token('$', '&')  # consume this token as it's invalid or was used
+                    elif not result:
+                        self._buffer.get_first_token('$', '&')  # consume this token as it was used
+                    else:
+                        pass  # do not consume this token as it will be used in future
+
             else:
                 break
