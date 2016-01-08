@@ -2,7 +2,7 @@ import pygame
 
 
 class Window(object):
-    def __init__(self, size, title, bg_color=(0,0,0)):
+    def __init__(self, size, title, bg_color=(0, 0, 0)):
         self._window = None
         self._size = size
         self._title = title

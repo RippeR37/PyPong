@@ -14,7 +14,7 @@ class PyPongClient:
         self.set_default_proc_callback()
 
     def _init_callbacks(self):
-        self._client._callbacks_incoming_data.append(
+        self._client.callbacks_incoming_data.append(
             lambda sock, data:
                 self.update_client(data)
         )
@@ -57,7 +57,7 @@ class PyPongClient:
                 try:
                     json_proc = json.loads(current_proc)
                     result = self.proc_callback(json_proc)
-                except json.JsonDecodeError:
+                except json.JSONDecodeError:
                     print("Invalid JSON proc: '{}'".format(current_proc))
                 except Exception as exc:
                     print("Unhandled exception from JSON proc callback: {}".format(exc))

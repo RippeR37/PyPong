@@ -4,9 +4,9 @@ import select
 
 class TCPServer:
     def __init__(self, host, port, max_clients):
+        self.clients = []
         self._host = host
         self._port = port
-        self._clients = []
         self._max_clients = max_clients
         self._buffer_size = 1024
         self._listening = False
@@ -30,11 +30,11 @@ class TCPServer:
         client.send(presufixed_data.encode())
 
     def send_all(self, data):
-        for client in self._clients:
+        for client in self.clients:
             self.send_to(client, data)
 
     def send_all_except(self, data, ignored_client):
-        for client in self._clients:
+        for client in self.clients:
             if client != ignored_client:
                 self.send_to(client, data)
 
@@ -43,13 +43,13 @@ class TCPServer:
         self._listening = True
 
         while self._listening:
-            read_sockets = select.select([self._socket] + self._clients, [], [], 1)[0]  # take only readable sockets
+            read_sockets = select.select([self._socket] + self.clients, [], [], 1)[0]  # take only readable sockets
 
             for sock in read_sockets:
                 if sock == self._socket:                                # Operation on server's socket
                     client_socket, client_addr = sock.accept()
-                    if len(self._clients) < self._max_clients:              # New valid client
-                        self._clients.append(client_socket)
+                    if len(self.clients) < self._max_clients:              # New valid client
+                        self.clients.append(client_socket)
                         self.assign_client_index(client_socket)
                         for callback in self.callbacks_connect:
                             callback(client_socket)
@@ -67,13 +67,13 @@ class TCPServer:
                             for callback in self.callbacks_disconnect:
                                 callback(sock)
                             sock.close()
-                            self._clients.remove(sock)
+                            self.clients.remove(sock)
                             self.assign_all_indexes()
                     except:                                                 # Client loses connection
                         for callback in self.callbacks_connection_lost:
                             callback(sock)
                         sock.close()
-                        self._clients.remove(sock)
+                        self.clients.remove(sock)
                         self.assign_all_indexes()
 
         self.close()
@@ -81,13 +81,13 @@ class TCPServer:
     def close(self):
         self._listening = False
 
-        for client_socket in self._clients:
+        for client_socket in self.clients:
             client_socket.close()
 
         self._socket.close()
 
     def get_client_index(self, client):
-        return self._clients.index(client)
+        return self.clients.index(client)
 
     def assign_client_index(self, client):
         if self.index_assign_msg:
@@ -95,5 +95,5 @@ class TCPServer:
             self.send_to(client, self.index_assign_msg(index))
 
     def assign_all_indexes(self):
-        for client in self._clients:
+        for client in self.clients:
             self.assign_client_index(client)

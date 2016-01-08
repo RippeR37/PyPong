@@ -1,5 +1,4 @@
 from Systems.Engine.Scene import Scene
-from Systems.Scenes.Gameplay.GameplayScene import GameplayScene
 
 
 class ServerLobby(Scene):
@@ -15,4 +14,4 @@ class ServerLobby(Scene):
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._gameplay_ready:
-            scene_stack.push(GameplayScene())
+            pass  # TODO: implement this

@@ -22,7 +22,7 @@ class GameplayScene(Scene):
             GameState(data=(PlayerState(-1.0, 0.0), PlayerState(1.0, 0.0), BallState(0.0, 0.0, 1.0, 1.0)))
         self._speed = 0.0
         self._clock = pygame.time.Clock()
-        self._window.set_title("PyPong - Gameplay | {} : {}".format(0, 0))
+        self._window.set_title("PyPong - Gameplay | {}:{}".format(0, 0))
         self._client.bind_proc_callback(self._process_json_proc)
         self._ball_img = pygame.image.load("Assets/ball.jpg")
         self._new_window_title = ""
@@ -43,11 +43,11 @@ class GameplayScene(Scene):
         self._client.signal_round_start()
 
     def _update_title_pts(self, game_state):
-        cmp_pts = lambda gs1, gs2: \
-            gs1.player1.pts == gs2.player1.pts and gs1.player2.pts == gs2.player2.pts
+        def cmp_pts(gs1, gs2):
+            return gs1.player1.pts == gs2.player1.pts and gs1.player2.pts == gs2.player2.pts
 
         if not cmp_pts(self._game_state, game_state):
-            self._new_window_title = "PyPong - Gameplay | {} : {}".format(game_state.player1.pts, game_state.player2.pts)
+            self._new_window_title = "PyPong - Gameplay | {}:{}".format(game_state.player1.pts, game_state.player2.pts)
 
     def _process_json_proc(self, json_proc):
         try:
@@ -128,7 +128,6 @@ class GameplayScene(Scene):
 
     def _render_ball(self, ball_data):
         ball_rect = self._get_ball_rect(ball_data)
-        # self._window.get_surface().fill((255, 255, 255), ball_rect)
         self._window.get_surface().blit(self._ball_img, ball_rect)
 
     def _get_player_rect(self, player_data):

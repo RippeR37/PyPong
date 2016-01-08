@@ -2,6 +2,7 @@ from Systems.Engine.Scene import Scene
 from Systems.Scenes.NetworkLobby.ServerLobby import ServerLobby
 from Systems.Scenes.NetworkLobby.ClientLobby import ClientLobby
 
+
 class MenuScene(Scene):
     def __init__(self):
         super().__init__(True, False)  # can be on top of other scenes, but is not used under any scenes

@@ -2,6 +2,7 @@ import socket
 import select
 import sys
 
+
 class TCPClient:
     def __init__(self, host, port):
         self._host = host
@@ -9,9 +10,9 @@ class TCPClient:
         self._buffer_size = 1024
         self._is_connected = False
         self._is_listening = False
-        self._callbacks_incoming_data = []
-        self._callbacks_disconnect = []
-        self._callbacks_connection_lost = []
+        self.callbacks_incoming_data = []
+        self.callbacks_disconnect = []
+        self.callbacks_connection_lost = []
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def is_connected(self):
@@ -33,8 +34,8 @@ class TCPClient:
         if self._is_connected:
             prefix = "$"
             sufix = "&"
-            presufixed_data = prefix + data + sufix
-            self._socket.send(presufixed_data.encode())
+            prefix_data_sufix = prefix + data + sufix
+            self._socket.send(prefix_data_sufix.encode())
 
     def read(self):
         if self._is_connected:
@@ -52,15 +53,15 @@ class TCPClient:
                 try:
                     data = sock.recv(self._buffer_size)
                     if data:
-                        for callback in self._callbacks_incoming_data:
+                        for callback in self.callbacks_incoming_data:
                             callback(sock, data.decode())
                     else:
-                        for callback in self._callbacks_disconnect:
+                        for callback in self.callbacks_disconnect:
                             callback(sock)
                         self.close()
                         break
                 except:
-                    for callback in self._callbacks_disconnect:
+                    for callback in self.callbacks_disconnect:
                         callback(sock)
                     self.close()
                     break
