@@ -2,6 +2,18 @@
 Multiplayer (P2P and client/server modes) **Pong** game written in Python using PyGames.
 
 
+
+### Usage
+
+**Host/Join game**:
+
+`python PyPong.py` (then follow on-screen instructions to host or connect to server)
+
+**Host standalone server**:
+
+`python PyPongStandaloneServer.py [ip port]` (type `quit` to shut it down)
+
+
 ### Controls
 
 * <kbd>&uarr;</kbd> - move your paddle up
@@ -9,6 +21,7 @@ Multiplayer (P2P and client/server modes) **Pong** game written in Python using 
 * <kbd>Space</kbd> - release ball if it's your turn*
 
 First turn is for `Player 2`. Next turns are whoever lost last round.
+
 
 ### Platforms tested
 
