@@ -12,8 +12,9 @@ class ClientLobby(Scene):
         self._client = None
 
     def update(self, dt):
-        input_ip = input("IP: ")
-        input_port = input("Port: ")
+        print("[CLIENT] Provide ip address and port of the server you want to connect to or leave empty to use default")
+        input_ip = input("[CLIENT] IP (localhost): ")
+        input_port = input("[CLIENT] Port (7664): ")
 
         if len(input_ip) > 0:
             self._host_ip = input_ip
@@ -30,9 +31,9 @@ class ClientLobby(Scene):
 
     def render(self):
         if self._connected:
-            print("Connected to server, entering game room.")
+            print("[CLIENT] Connected to server, entering game room.")
         else:
-            print("Could not connect to server!")
+            print("[CLIENT] Could not connect to server!")
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._connected:

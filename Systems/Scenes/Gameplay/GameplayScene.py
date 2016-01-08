@@ -52,7 +52,8 @@ class GameplayScene(Scene):
     def _process_json_proc(self, json_proc):
         try:
             if json_proc['proc'] == 'index_assignment':
-                print("Other player has disconnected!")
+                print("[CLIENT] Other player has disconnected!")
+                print("[CLIENT] Waiting for new player to connect...")
                 self._lobby = True
                 self._index = json_proc['data']['index']
                 self._client.set_default_proc_callback()
@@ -71,9 +72,9 @@ class GameplayScene(Scene):
                     self._game_state.player1 = server_gs.data['game_state'].player1
                 return False  # consume message as it was processed
         except:
-            print("DEBUG INF #42179521")
+            pass
 
-        return True  # TODO: change this?!
+        return True  # consume this message to avoid piling
 
     def update(self, dt):
         if self._lobby:
@@ -117,7 +118,7 @@ class GameplayScene(Scene):
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._end:
-            scene_stack.clear()  # TODO: implement better scene stack processing then quiting (e.g. go to menu/lobby)
+            scene_stack.clear()
         if self._lobby:
             scene_stack.get_scene(scene_index-1).set_index(self._index)
             scene_stack.cut_from(self)

@@ -25,9 +25,9 @@ class TCPServer:
     @staticmethod
     def send_to(client, data):
         prefix = "$"
-        sufix = "&"
-        presufixed_data = prefix + data + sufix
-        client.send(presufixed_data.encode())
+        suffix = "&"
+        prefix_data_suffix = prefix + data + suffix
+        client.send(prefix_data_suffix.encode())
 
     def send_all(self, data):
         for client in self.clients:

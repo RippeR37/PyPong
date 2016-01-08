@@ -17,14 +17,14 @@ class PyPongStandaloneServer:
         while True:
             cmd = input()
             if cmd == "quit":
-                print("Server is stopping...")
                 self.stop_listener()
-                print("Server stopped!")
                 break
 
     def stop_listener(self):
+        print("Server is stopping...")
         self._server_listener.stop()
         self._server_listener.join()
+        print("Server stopped!")
 
 
 def main():

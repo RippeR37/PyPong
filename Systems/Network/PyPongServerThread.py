@@ -9,7 +9,7 @@ import json
 
 class PyPongServerThread(threading.Thread):
     def __init__(self, host="127.0.0.1", port=7664):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, daemon=True)
         self.host = host
         self.port = port
         self._is_running = False
@@ -37,7 +37,7 @@ class PyPongServerThread(threading.Thread):
         self._server.callbacks_connect.append(lambda client: self._add_buffer(client))
         self._server.callbacks_connect.append(
             lambda client:
-                print("New client ({}, {}) connected.".format(
+                print("[SERVER] New client ({}, {}) connected.".format(
                     self._server.get_client_index(client),
                     client.getpeername())
                 )
@@ -46,20 +46,20 @@ class PyPongServerThread(threading.Thread):
 
         # Server full
         self._server.callbacks_server_full.append(
-            lambda client: print("Attempt to connect to full server from {}".format(client.getpeername()))
+            lambda client: print("[SERVER] Attempt to connect to full server from {}".format(client.getpeername()))
         )
 
         # Client lost connection
         self._server.callbacks_connection_lost.append(
             lambda client:
-                print("Connection lost from client {}".format(client.getpeername()))
+                print("[SERVER] Connection lost from client {}".format(client.getpeername()))
         )
         self._server.callbacks_connection_lost.append(lambda client: self._remove_buffer(client))
 
         # Disconnected client
         self._server.callbacks_disconnect.append(
             lambda client:
-                print("Client {} disconnected".format(client.getpeername()))
+                print("[SERVER] Client {} disconnected".format(client.getpeername()))
         )
         self._server.callbacks_disconnect.append(lambda client: self._remove_buffer(client))
 
@@ -102,9 +102,9 @@ class PyPongServerThread(threading.Thread):
                     elif json_proc['proc'] == 'game_state_update':
                         self._process_game_state_update(client, json_proc)
                 except json.JSONDecodeError:
-                    print("Invalid JSON proc: '{}'".format(current_proc))
+                    print("[SERVER] Invalid JSON procedure: '{}'".format(current_proc))
                 except Exception as exc:
-                    print("Unhandled exception while parsing JSON procedure: {}".format(exc))
+                    print("[SERVER] Unhandled exception while parsing JSON procedure: {}".format(exc))
             else:
                 break
 

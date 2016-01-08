@@ -37,10 +37,8 @@ class WaitingRoomScene(Scene):
         if proc_name == "index_assignment":
             proc = IndexAssignmentProc(-1).from_json(json_proc)
             self.set_index(proc.data['index'])
-            print("[INDEX_ASSIGNMENT]")
             return False  # consume message
         elif proc_name == "server_ready":
-            print("[SERVER_READY]")
             self._is_gameplay_ready = True
             self._client.set_default_proc_callback()
             return False  # consume message
@@ -48,10 +46,10 @@ class WaitingRoomScene(Scene):
             if self._is_gameplay_ready:
                 return True  # leave that message to read in GameplayScene
             else:
-                print("Warning: Recieved [GAME_STATE_UPDATE] signal before [SERVER_READY]")
+                print("[CLIENT] Warning: Received GAME_STATE_UPDATE signal before SERVER_READY signal.")
                 return False  # don't leave that message as it might pile up fast
         else:
-            print("Unknown procedure: {}".format(proc_name))
+            print("[CLIENT] Unknown procedure: {}".format(proc_name))
             return False  # consume message as it might pile up fasts
 
     def update(self, dt):
@@ -74,4 +72,4 @@ class WaitingRoomScene(Scene):
             self._is_gameplay_ready = False
             scene_stack.push(GameplayScene(self._client, self._client_listener, self._window, self._index_assigned))
         elif self._end:
-            scene_stack.clear()  # TODO: ...
+            scene_stack.clear()

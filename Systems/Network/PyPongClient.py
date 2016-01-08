@@ -58,9 +58,9 @@ class PyPongClient:
                     json_proc = json.loads(current_proc)
                     result = self.proc_callback(json_proc)
                 except json.JSONDecodeError:
-                    print("Invalid JSON proc: '{}'".format(current_proc))
+                    print("[CLIENT] Received invalid JSON procedure: '{}'".format(current_proc))
                 except Exception as exc:
-                    print("Unhandled exception from JSON proc callback: {}".format(exc))
+                    print("[CLIENT] Unhandled exception from JSON procedure callback: {}".format(exc))
                 finally:
                     if result is None:
                         self._buffer.get_first_token('$', '&')  # consume this token as it's invalid or was used
@@ -68,6 +68,5 @@ class PyPongClient:
                         self._buffer.get_first_token('$', '&')  # consume this token as it was used
                     else:
                         pass  # do not consume this token as it will be used in future
-
             else:
                 break

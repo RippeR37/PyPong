@@ -1,6 +1,5 @@
 import socket
 import select
-import sys
 
 
 class TCPClient:
@@ -27,8 +26,7 @@ class TCPClient:
                 self._socket.connect((self._host, self._port))
                 self._is_connected = True
             except ConnectionRefusedError:
-                print("Could not connect to {}:{}".format(self._host, self._port))
-                sys.exit(1)
+                self._is_connected = False
 
     def send(self, data):
         if self._is_connected:
