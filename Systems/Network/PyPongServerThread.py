@@ -2,6 +2,8 @@ from Systems.Network.tcp.tcp_server import TCPServer
 from Systems.Network.Messages.IndexAssignmentProc import IndexAssignmentProc
 from Systems.Network.Messages.ServerReadyProc import ServerReadyProc
 from Systems.Network.Messages.GamestateUpdateProc import GameState, GameStateUpdateProc
+from Systems.Network.Messages.GameOverProc import GameOverProc
+from Systems.Network.Messages.PlayAgainProc import PlayAgainProc
 from Systems.Network.TokenBuffer import TokenBuffer
 from Systems.Utils.TimeHelper import Time
 import threading
@@ -21,8 +23,11 @@ class PyPongServerThread(threading.Thread):
         self._client_start_round = 1  # Second player starts first
         self._ball_speed = 1.0
         self._ball_speed_max = 2.5
+        self._game_win_pts = 1  # first to 5 points wins game # TODO: CHANGE THIS TO 5
+        self._game_end_signal = False
         self._last_time = None
         self._this_time = None
+        self._play_again_signals = [False, False]
 
     def _add_buffer(self, client):
         self._buffers[client.getpeername()] = TokenBuffer()
@@ -84,6 +89,9 @@ class PyPongServerThread(threading.Thread):
     def _reset_game_state(self):
         self._game_state = GameState()
         self._client_start_round = 1
+        self._ball_speed = 1.0
+        self._game_end_signal = False
+        self._play_again_signals = [False, False]
 
     def _signal_start_if_ready(self):
         if len(self._server.clients) == 2:
@@ -104,6 +112,8 @@ class PyPongServerThread(threading.Thread):
                         self._process_signal_start_round(client)
                     elif json_proc['proc'] == 'game_state_update':
                         self._process_game_state_update(client, json_proc)
+                    elif json_proc['proc'] == 'play_again':
+                        self._process_play_again_proc(client)
                 except json.JSONDecodeError:
                     print("[SERVER] Invalid JSON procedure: '{}'".format(current_proc))
                 except Exception as exc:
@@ -122,16 +132,33 @@ class PyPongServerThread(threading.Thread):
                     self._game_state.ball.vx = -0.33
                     self._game_state.ball.vy = -0.66
 
+    def _process_play_again_proc(self, client):
+        if self._game_end_signal:
+            client_index = self._server.get_client_index(client)
+            self._play_again_signals[client_index] = True
+
+            # Check if both sent signals, if so then start new game
+            if self._play_again_signals[0] and self._play_again_signals[1]:
+                self._reset_game_state()
+                self._server.send_all(ServerReadyProc().to_json())
+
     def _increase_ball_speed_on_hit(self):
         self._ball_speed += 0.1
         if self._ball_speed > self._ball_speed_max:
             self._ball_speed = self._ball_speed_max
+
+    def _is_game_over(self):
+        return max(self._game_state.player1.pts, self._game_state.player2.pts) >= self._game_win_pts
 
     def _process_game_state_update(self, client, json_proc):
         gsup = GameStateUpdateProc(None).from_json(json_proc)
         ball = self._game_state.ball
         p1 = gsup.data['game_state'].player1
         p2 = gsup.data['game_state'].player2
+
+        # Check it this data didn't come after game ended, if so then stop processing it
+        if self._is_game_over():
+            return
 
         # Delta time computing
         self._this_time = Time.now()
@@ -176,11 +203,34 @@ class PyPongServerThread(threading.Thread):
             self._game_state.player1.pts += 1
             self._client_start_round = 1
 
-        # Update ball's state in client's message and broadcast it along
-        gsup.data['game_state'].ball = ball
-        gsup.data['game_state'].player1.pts = self._game_state.player1.pts
-        gsup.data['game_state'].player2.pts = self._game_state.player2.pts
-        self._server.send_all_except(gsup.to_json(), client)
+        # Check if it's not end of game
+        if self._is_game_over():
+            self._send_game_over_signals()
+
+        # If it's not, send back updated gameplay state
+        else:
+            # Update ball's state in client's message and broadcast it along
+            gsup.data['game_state'].ball = ball
+            gsup.data['game_state'].player1.pts = self._game_state.player1.pts
+            gsup.data['game_state'].player2.pts = self._game_state.player2.pts
+            self._server.send_all_except(gsup.to_json(), client)  # TODO: make sure it shouldn't be send_all()
+
+    def _send_game_over_signals(self):
+        if self._is_game_over() and not self._game_end_signal:
+            players = self._server.clients
+            player1 = players[0]
+            player2 = players[1]
+
+            if self._game_state.player1.pts >= self._game_win_pts:
+                print("[SERVER] Player1 won this round.")
+                self._server.send_to(player1, GameOverProc(result="win").to_json())
+                self._server.send_to(player2, GameOverProc(result="lose").to_json())
+            else:
+                print("[SERVER] Player2 won this round.")
+                self._server.send_to(player1, GameOverProc(result="lose").to_json())
+                self._server.send_to(player2, GameOverProc(result="win").to_json())
+
+            self._game_end_signal = True
 
     @staticmethod
     def intersect(r1, r2):

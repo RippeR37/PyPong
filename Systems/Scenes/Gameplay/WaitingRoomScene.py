@@ -8,7 +8,7 @@ import pygame
 
 
 class WaitingRoomScene(Scene):
-    def __init__(self, client):
+    def __init__(self, client, stats):
         assert isinstance(client, PyPongClient), "Invalid object type - client must be of PyPongClient type!"
 
         super().__init__(True, False)
@@ -17,10 +17,11 @@ class WaitingRoomScene(Scene):
         self._window = Window((600, 400), "PyPong - Waiting in clientReadyScene")
         self._is_gameplay_ready = False
         self._end = False
-        self._window.create()
         self._listen_to_host()
         self._index_assigned = -1
         self._index_assigned_read = False
+        self._window.create()
+        self._stats = stats
 
     def set_index(self, index):
         self._index_assigned = index
@@ -70,6 +71,8 @@ class WaitingRoomScene(Scene):
     def process_scene_stack(self, scene_stack, scene_index):
         if self._is_gameplay_ready:
             self._is_gameplay_ready = False
-            scene_stack.push(GameplayScene(self._client, self._client_listener, self._window, self._index_assigned))
+            scene_stack.push(
+                GameplayScene(self._client, self._client_listener, self._window, self._index_assigned, self._stats)
+            )
         elif self._end:
             scene_stack.clear()

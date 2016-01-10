@@ -4,12 +4,13 @@ from Systems.Network.PyPongClient import PyPongClient
 
 
 class ClientLobby(Scene):
-    def __init__(self):
+    def __init__(self, stats):
         super().__init__(True, False)
         self._connected = False
         self._host_ip = "localhost"
         self._host_port = 7664
         self._client = None
+        self._stats = stats
 
     def update(self, dt):
         print("[CLIENT] Provide ip address and port of the server you want to connect to or leave empty to use default")
@@ -37,4 +38,4 @@ class ClientLobby(Scene):
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._connected:
-            scene_stack.push(WaitingRoomScene(self._client))
+            scene_stack.push(WaitingRoomScene(self._client, self._stats))

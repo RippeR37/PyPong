@@ -2,6 +2,7 @@ from Systems.Network.TokenBuffer import TokenBuffer
 from Systems.Network.tcp.tcp_client import TCPClient
 from Systems.Network.Messages.GamestateUpdateProc import GameStateUpdateProc
 from Systems.Network.Messages.StartRoundProc import StartRoundProc
+from Systems.Network.Messages.PlayAgainProc import PlayAgainProc
 import json
 
 
@@ -45,6 +46,9 @@ class PyPongClient:
 
     def signal_round_start(self):
         self._client.send(StartRoundProc().to_json())
+
+    def signal_play_again(self):
+        self._client.send(PlayAgainProc().to_json())
 
     def update_client(self, incoming_data):
         self._buffer.push(incoming_data)

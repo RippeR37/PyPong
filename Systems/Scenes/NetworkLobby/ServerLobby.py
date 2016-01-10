@@ -5,13 +5,14 @@ from Systems.Network.PyPongServerThread import PyPongServerThread
 
 
 class ServerLobby(Scene):
-    def __init__(self):
+    def __init__(self, stats):
         super().__init__(True, False)
         self._connected = False
         self._host_ip = "localhost"
         self._host_port = 7664
         self._client = None
         self._server_listener = None
+        self._stats = stats
         self._start_server()
 
     def _start_server(self):
@@ -49,4 +50,4 @@ class ServerLobby(Scene):
 
     def process_scene_stack(self, scene_stack, scene_index):
         if self._connected:
-            scene_stack.push(WaitingRoomScene(self._client))
+            scene_stack.push(WaitingRoomScene(self._client, self._stats))

@@ -1,5 +1,6 @@
 from Systems.Engine.SceneStack import SceneStack
 from Systems.Utils.TimeHelper import Time
+from Systems.Utils.Console import Console
 
 
 class GameEngine(object):
@@ -30,3 +31,5 @@ class GameEngine(object):
                 scene_index = self._scenes.count() - 1
                 last_scene = self._scenes.get_scene(scene_index)
                 self._process_scene(last_scene, dt, scene_index)
+
+        Console.cls()
