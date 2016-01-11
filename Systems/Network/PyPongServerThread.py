@@ -23,7 +23,7 @@ class PyPongServerThread(threading.Thread):
         self._client_start_round = 1  # Second player starts first
         self._ball_speed = 1.0
         self._ball_speed_max = 2.5
-        self._game_win_pts = 1  # first to 5 points wins game # TODO: CHANGE THIS TO 5
+        self._game_win_pts = 5  # first to 5 points wins game
         self._game_end_signal = False
         self._last_time = None
         self._this_time = None
@@ -213,7 +213,7 @@ class PyPongServerThread(threading.Thread):
             gsup.data['game_state'].ball = ball
             gsup.data['game_state'].player1.pts = self._game_state.player1.pts
             gsup.data['game_state'].player2.pts = self._game_state.player2.pts
-            self._server.send_all_except(gsup.to_json(), client)  # TODO: make sure it shouldn't be send_all()
+            self._server.send_all(gsup.to_json())
 
     def _send_game_over_signals(self):
         if self._is_game_over() and not self._game_end_signal:
